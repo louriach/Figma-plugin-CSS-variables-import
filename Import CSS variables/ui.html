@@ -1,17 +1,611 @@
-<h2>Rectangle Creator</h2>
-<p>Count: <input id="count" type="number" value="5"></p>
-<button id="create">Create</button>
-<button id="cancel">Cancel</button>
-<script>
-
-document.getElementById('create').onclick = () => {
-  const textbox = document.getElementById('count');
-  const count = parseInt(textbox.value, 10);
-  parent.postMessage({ pluginMessage: { type: 'create-shapes', count } }, '*')
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CSS Variables to Figma Variables</title>
+  <style>
+    /* http://meyerweb.com/eric/tools/css/reset/ 
+             v2.0 | 20110126
+             License: none (public domain)
+          */
+          
+          html, body, div, span, applet, object, iframe,
+          h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+          a, abbr, acronym, address, big, cite, code,
+          del, dfn, em, img, ins, kbd, q, s, samp,
+          small, strike, strong, sub, sup, tt, var,
+          b, u, i, center,
+          dl, dt, dd, ol, ul, li,
+          fieldset, form, label, legend,
+          table, caption, tbody, tfoot, thead, tr, th, td,
+          article, aside, canvas, details, embed, 
+          figure, figcaption, footer, header, hgroup, 
+          menu, nav, output, ruby, section, summary,
+          time, mark, audio, video {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
+          }
+          /* HTML5 display-role reset for older browsers */
+          article, aside, details, figcaption, figure, 
+          footer, header, hgroup, menu, nav, section {
+            display: block;
+          }
+          body {
+            line-height: 1;
+          }
+          ol, ul {
+            list-style: none;
+          }
+          blockquote, q {
+            quotes: none;
+          }
+          blockquote:before, blockquote:after,
+          q:before, q:after {
+            content: '';
+            content: none;
+          }
+          table {
+            border-collapse: collapse;
+            border-spacing: 0;
+          }
+          
+          body {
+            background-color: #f0f0f0;
+            color: #2D2A0B;
+            font-family: Inter, sans-serif;
+            font-size: 13px;
+            margin: 0;
+            text-align: center;
+          }
+          .gradient {
+            background: linear-gradient(180deg, #FFD700 0%, #FFCE00 11.11%, #FFC500 22.22%, #FFBC00 33.33%, #FFB300 44.44%, #FFAA00 55.56%, #FFA100 66.67%, #FF9800 77.78%, #FF8F00 88.89%, #FF8600 100%);
+            bottom: 0;
+            left: 0;
+            opacity: 0.05;
+            position: fixed;
+            right: 0;
+            top: 0;
+            z-index: -1;
+          }   
+          
+          .plugin-border {
+            background: rgba(255,255,255,.5);
+            position: fixed;
+            z-index: 1;
+          }
+          
+          .plugin-border-bottom {
+            bottom: 0;
+            height: 2px;
+            left: 0;
+            right: 0;
+          }
+          
+          .plugin-border-left {
+            bottom: 0;
+            left: 0;
+            top: 0;
+            width: 2px;
+          }
+          
+          .plugin-border-right {
+            bottom: 0;
+            right: 0;
+            top: 0;
+            width: 2px;
+          }
+          
+          .plugin-border-top {
+            height: 2px;
+            left: 0;
+            right: 0;
+            top: 0;
+          }
+          
+          .section {
+            background: rgba(255,255,255,.5);
+            border: 1px solid rgba(255,255,255,.9);
+            box-shadow: 0 1px 0 rgba(0,0,0,.05);
+            border-radius: 9px;
+            margin-bottom: 16px;
+            padding: 16px;
+            position: relative;
+            z-index: 1;
+          }  
+          
+          .container {
+            padding: 16px;
+          }
+        
+        .tab-content {
+          display: none;
+        }
+        
+        .tab-content.active {
+          display: block;
+        }
+        .tabs {    
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            padding: 12px 16px;
+          }
+          
+          .tab {
+            box-shadow: inset 0 0px 4px rgba(0, 0, 0, .07);
+            border-radius: 9px;
+            border: 2px solid rgba(255, 255, 255, .3);
+            font-weight: 500;
+            padding: 8px 10px;
+            cursor: pointer;
+          }
+          
+          .tab:hover {
+            background: rgba(255,255,255,.2);
+          }
+          
+          .tab.active {
+            background-color: white;
+            border: 1px solid #fff;
+            border-bottom: none;
+            box-shadow: 0 2px 2px rgba(0, 0, 0, .025), 0 1px 1px rgba(0, 0, 0, .025);
+            position: relative;
+          }
+              
+        
+        textarea {
+          background-color: #fff;
+          border: 1px solid rgba(0, 0, 0, .1);
+          border-radius: 6px;
+          font-family: "Courier New", monospace;
+          margin-bottom: 16px;
+          min-height: 160px;
+          max-height: 320px;
+          padding: 12px;
+          overflow-y: auto;
+          resize: vertical;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        
+        .file-input-wrapper {
+          margin-bottom: 16px;
+          position: relative;
+          text-align: center;
+        }
+        
+        .file-input-wrapper input[type="file"] {
+          position: absolute;
+          left: 0;
+          top: 0;
+          opacity: 0;
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+          z-index: 2;
+        }
+        
+        .file-input-button {
+          background-color: #fff;
+          border: 1px solid rgba(0, 0, 0, .1);
+          border-radius: 6px;
+          color: #2D2A0B;
+          cursor: pointer;
+          display: block;
+          font-family: Inter, sans-serif;
+          font-size: 13px;
+          margin-bottom: 8px;
+          min-height: 160px;
+          padding: 12px;
+          position: relative;
+          text-align: center;
+          transition: all 0.2s ease;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        
+        .file-input-button:hover {
+          background-color: rgba(255, 255, 255, 0.8);
+          border-color: rgba(0, 0, 0, 0.2);
+        }
+        
+        .file-input-icon {
+          display: block;
+          font-size: 32px;
+          margin: 30px auto 15px;
+          color: #D4AF00;
+        }
+        
+        .file-name {
+          background-color: rgba(255, 215, 0, 0.1);
+          border-radius: 4px;
+          color: #8B7500;
+          display: inline-block;
+          font-size: 12px;
+          margin-top: 8px;
+          max-width: 100%;
+          overflow: hidden;
+          padding: 4px 8px;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        
+        .button-primary {
+            background: linear-gradient(180deg, #D15710 0%, #D05610 11.11%, #D05610 22%, #CE5610 33%, #CD5510 44%, #CB540F 55%, #CA540F 66%, #C9530F 77%, #C8530F 88%, #C7520F 100%);
+            width: 100%;
+            border: none;
+            border-radius: 6px;
+            box-shadow: 0 2px 2px rgba(0, 0, 0, .1), 0 2px 8px rgba(0, 0, 0, .1);
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: .3px;
+            padding: 12px 20px;
+            transition: all ease .1s;
+          }
+          
+          .button-primary:hover {
+            background: linear-gradient(180deg, #C4520F 0%, #C4520F 11.11%, #C2510F 22%, #C2510F 33%, #BF500F 44%, #BF4F0E 55%, #BD4E0E 66%, #BD4E0E 77%, #BA4D0E 88%, #BA4D0E 100%);;
+            box-shadow: 0 4px 2px rgba(0, 0, 0, .1), 0 2px 20px rgba(0, 0, 0, .1);
+          }
+          
+          .button-primary:disabled {
+            opacity: 0.1;
+            pointer-events: none;
+          }
+          
+          .button-primary.active {
+            opacity: 1;
+          }
+        
+        .status {
+          margin-top: 16px;
+          padding: 8px;
+          border-radius: 4px;
+          display: none;
+        }
+        
+        .status.success {
+          background-color: #e3f8e9;
+          color: #0d652d;
+          display: block;
+        }
+        
+        .status.error {
+          background-color: #ffebe6;
+          color: #c4320a;
+          display: block;
+        }
+        .notice {
+          font-size: 12px;
+          line-height: 1.5;
+          text-align: left;
+        }
+        .notice p {
+          margin-bottom: 8px;
+        }
+        .notice code {
+          background-color: rgba(0,0,0,0.05);
+          border-radius: 3px;
+          font-family: monospace;
+          padding: 2px 4px;
+        }
+        .notice pre {
+          background-color: rgba(0,0,0,0.05);
+          border: 1px solid rgba(0, 0, 0, .1);
+          border-radius: 6px;
+          font-family: "Courier New", monospace;
+          margin-bottom: 16px;
+          padding: 12px;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        }
+        h1 {
+          font-size: 18px;
+          font-weight: 600;
+          margin: 16px 0 8px;
+        }
+        h2 {
+          font-size: 16px;
+          font-weight: 600;
+          margin: 8px 0;
+          text-align: left;
+        }
+        .title {
+            background: rgba(255, 94, 0, 0.1);
+            border-radius: 6px;
+            color: #9E3B02;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding: 8px;
+            text-align: left;        
+          }
+          .file-error-notice {
+            align-items: center;
+            background: linear-gradient(60deg, #C00F0C, #900B09);
+          border-radius: 6px;
+          color: #FEE9E7;
+          display: none;
+          margin-bottom: 16px;
+          padding: 6px 8px;
+          text-align: left;
+    }
+    .file-error-icon {
+      font-size: 16px;
+      margin-right: 8px;
+    }
+    .file-error-message {
+      font-size: 12px;
+      line-height: 1.4;
+    }      
+      </style>
+</head>
+<body>
+  <div class="plugin-border plugin-border-bottom"></div>
+  <div class="plugin-border plugin-border-left"></div>
+  <div class="plugin-border plugin-border-right"></div>
+  <div class="plugin-border plugin-border-top"></div>
+  
+  <div class="gradient"></div>
+  
+    <div class="tabs">
+      <div class="tab active" data-tab="paste">Paste CSS</div>
+      <div class="tab" data-tab="file">Upload File</div>
+    </div>
+  <div class="container">
+    <div class="tab-content active section" id="paste-content">
+      <textarea id="css-input" placeholder="/* Collection name: Color */
+/* Mode: Light */
+:root {
+  --primary-color: #18a0fb;
+  --secondary-color: #0d8ce6;
+}"></textarea>
+      <button id="parse-css" class="button-primary">Create Variables</button>
+    </div>
+    
+    <div class="tab-content section" id="file-content">
+      <div class="file-input-wrapper">
+        <div class="file-input-button">
+          <span class="file-input-icon">📄</span>
+          <span>Drag and drop a CSS file here<br>or click to browse</span>
+          <div id="file-name-display"></div>
+        </div>
+        <input type="file" id="file-input" accept=".css">
+      </div>
+      <button id="parse-file" class="button-primary" disabled>Create Variables</button>
+    </div>
+    
+    <div id="status" class="status"></div>
+    
+    <div class="section">
+      <h2 class="title">Required CSS Format</h2>
+      <div class="notice">
+        <p>CSS must include comments to define collections and modes:</p>
+        <pre>/* Collection name: Color Primitives */
+/* Mode: Light */
+:root {
+  --slate-100: #f3f3f3;
+  --slate-200: #e3e3e3;
 }
-
-document.getElementById('cancel').onclick = () => {
-  parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
-}
-
+/* Collection name: Color */
+/* Mode: Dark */
+:root {
+  --background-default: var(--slate-100);
+  --text-default: var(--slate-900);
+}</pre>
+        <p>The plugin will:</p>
+        <ul style="list-style-type: disc; margin-left: 16px;">
+          <li>Create Figma collections based on<code>/* Collection name: X */</code></li>
+          <li>Create modes within collections based on<code>/* Mode: Y */</code></li>
+          <li>Support variable references using<code>var(--variable-name)</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById(`${tab.dataset.tab}-content`).classList.add('active');
+      });
+    });
+    
+    // Validate CSS content
+    function validateCSSContent(cssText) {
+      // Check if the content has CSS variables
+      if (!cssText.includes('--')) {
+        return { valid: false, message: 'No CSS variables found in the file' };
+      }
+      
+      // Check if the content has collection and mode comments
+      const hasCollectionComment = /\/\*\s*Collection name:/i.test(cssText);
+      const hasModeComment = /\/\*\s*Mode:/i.test(cssText);
+      
+      if (!hasCollectionComment || !hasModeComment) {
+        return { 
+          valid: false, 
+          message: 'Missing required comments. CSS must include "/* Collection name: */" and "/* Mode: */" comments' 
+        };
+      }
+      
+      return { valid: true };
+    }
+    
+    // Validate file type
+    function validateFileType(file) {
+      // Check if file exists
+      if (!file) {
+        return { valid: false, message: 'No file selected' };
+      }
+      
+      // Check file extension
+      const fileName = file.name.toLowerCase();
+      if (!fileName.endsWith('.css')) {
+        return { valid: false, message: 'File must be a CSS file (.css)' };
+      }
+      
+      return { valid: true };
+    }
+    
+    // Show file error notice
+    function showFileError(message) {
+      // Create or update the file error notice
+      let fileErrorNotice = document.getElementById('file-error-notice');
+      
+      if (!fileErrorNotice) {
+        fileErrorNotice = document.createElement('div');
+        fileErrorNotice.id = 'file-error-notice';
+        fileErrorNotice.className = 'file-error-notice';
+        
+        // Insert after the file input wrapper
+        const fileInputWrapper = document.querySelector('.file-input-wrapper');
+        fileInputWrapper.parentNode.insertBefore(fileErrorNotice, fileInputWrapper.nextSibling);
+      }
+      
+      fileErrorNotice.innerHTML = `
+        <div class="file-error-icon">⚠️</div>
+        <div class="file-error-message">${message}</div>
+      `;
+      
+      fileErrorNotice.style.display = 'flex';
+    }
+    
+    // Hide file error notice
+    function hideFileError() {
+      const fileErrorNotice = document.getElementById('file-error-notice');
+      if (fileErrorNotice) {
+        fileErrorNotice.style.display = 'none';
+      }
+    }
+    
+    // Handle file input
+    document.getElementById('file-input').addEventListener('change', (event) => {
+      const fileInput = event.target;
+      const parseFileButton = document.getElementById('parse-file');
+      const fileNameDisplay = document.getElementById('file-name-display');
+      
+      // Hide any previous error notice
+      hideFileError();
+      
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        
+        // Validate file type
+        const fileValidation = validateFileType(file);
+        if (!fileValidation.valid) {
+          showFileError(fileValidation.message);
+          fileNameDisplay.innerHTML = '';
+          parseFileButton.disabled = true;
+          return;
+        }
+        
+        // Read file content to validate
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const cssText = e.target.result;
+          const contentValidation = validateCSSContent(cssText);
+          
+          if (!contentValidation.valid) {
+            fileNameDisplay.innerHTML = `<span class="file-name file-error">${file.name}</span>`;
+            showFileError(contentValidation.message);
+            parseFileButton.disabled = true;
+          } else {
+            fileNameDisplay.innerHTML = `<span class="file-name">${file.name}</span>`;
+            parseFileButton.disabled = false;
+          }
+        };
+        
+        reader.onerror = () => {
+          showFileError('Error reading file');
+          fileNameDisplay.innerHTML = '';
+          parseFileButton.disabled = true;
+        };
+        
+        reader.readAsText(file);
+      } else {
+        fileNameDisplay.innerHTML = '';
+        parseFileButton.disabled = true;
+      }
+    });
+    
+    // Parse CSS from textarea
+    document.getElementById('parse-css').addEventListener('click', () => {
+      const cssText = document.getElementById('css-input').value;
+      if (!cssText.trim()) {
+        showStatus('Please enter CSS variables', 'error');
+        return;
+      }
+      
+      // Validate CSS content
+      const validation = validateCSSContent(cssText);
+      if (!validation.valid) {
+        showStatus(validation.message, 'error');
+        return;
+      }
+      
+      parent.postMessage({ pluginMessage: { type: 'parse-css', cssText } }, '*');
+    });
+    
+    // Parse CSS from file
+    document.getElementById('parse-file').addEventListener('click', () => {
+      const fileInput = document.getElementById('file-input');
+      const file = fileInput.files[0];
+      
+      // Validate file type again
+      const fileValidation = validateFileType(file);
+      if (!fileValidation.valid) {
+        showFileError(fileValidation.message);
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const cssText = event.target.result;
+        
+        // Validate CSS content again before sending
+        const contentValidation = validateCSSContent(cssText);
+        if (!contentValidation.valid) {
+          showStatus(contentValidation.message, 'error');
+          return;
+        }
+        
+        parent.postMessage({ pluginMessage: { type: 'parse-css', cssText } }, '*');
+      };
+      
+      reader.onerror = () => {
+        showStatus('Error reading the file', 'error');
+      };
+      
+      reader.readAsText(file);
+    });
+    
+    // Handle messages from the plugin
+    window.onmessage = (event) => {
+      const message = event.data.pluginMessage;
+      
+      if (message.type === 'status') {
+        showStatus(message.message, message.status);
+      }
+    };
+    
+    function showStatus(message, status) {
+      const statusElement = document.getElementById('status');
+      statusElement.textContent = message;
+      statusElement.className = `status ${status}`;
+    }
 </script>
+</body>
+</html>
